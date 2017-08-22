@@ -88,7 +88,7 @@ private int i1; 字段是private，所以字段规则不满足，i1不会进行�
 看到这里，是不是觉得序列化很容易掌握？别高兴太早，这个世界并不是我们想象的这么简单，现在是时候让我们来面对序列化复杂的另一面了。
 
 #### 1.热重载
-热重载(hot-reload)是我们最常见却又常常忽略的序列化例外。我们继续用前面的TestWindow1做掩饰，打开窗口分别给各个对象随机赋值
+热重载(hot-reload)是我们最常见却又常常忽略的序列化例外。我们继续用前面的TestWindow1做演示，打开窗口分别给各个对象随机赋值
 ![热重载前](https://github.com/jintiao/SerializationTest/blob/master/Doc/test1-3.png)
 
 现在我们点击编辑器的"播放"按钮，观察TestWindow1窗口中的值有何变化

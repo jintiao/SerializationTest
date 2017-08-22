@@ -40,6 +40,8 @@ public class TestWindow1 : EditorWindow {
 			s1 = new MyClassSerializable();
 		if(s2 == null)
 			s2 = new MyClassSerializable();
+			
+		titleContent.text = "TestWindow1";
 	}
 
 	void OnGUI() {
