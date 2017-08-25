@@ -8,8 +8,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2172e7e38a4bf40e0bd718f96ec30108, type: 3}
+  m_Script: {fileID: 11500000, guid: 4bc7b481e86354e188942f7fa0a05fd3, type: 3}
   m_Name: SaveData
   m_EditorClassIdentifier: 
-  i1: 47
-  i2: 27
+  i1: 0
+  i2: 0
