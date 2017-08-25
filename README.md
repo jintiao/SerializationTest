@@ -63,7 +63,7 @@ GUI相关的代码就不列出来了，完整的代码在[这里](https://github
 
 | 重启编辑器前 | 重启编辑器后 |
 | ------------- | ------------- |
-| ![重启编辑器前](https://github.com/jintiao/SerializationTest/blob/master/Doc/test1-1.png) | ![重启编辑器后](https://github.com/jintiao/SerializationTest/blob/master/Doc/test1-2.png) |
+| ![重启编辑器前](https://github.com/jintiao/SerializationTest/blob/master/Image/1-1.png) | ![重启编辑器后](https://github.com/jintiao/SerializationTest/blob/master/Image/1-2.png) |
 
 在编辑器中打开TestWindow1，分别给各个对象随机赋值
 
@@ -95,7 +95,7 @@ private int i1; // 字段是private，所以字段规则不满足，i1不会进�
 
 | 热重载前 | 热重载后 |
 | ------------- | ------------- |
-| ![热重载前](https://github.com/jintiao/SerializationTest/blob/master/Doc/test1-3.png) | ![热重载后](https://github.com/jintiao/SerializationTest/blob/master/Doc/test1-4.png) |
+| ![热重载前](https://github.com/jintiao/SerializationTest/blob/master/Image/1-3.png) | ![热重载后](https://github.com/jintiao/SerializationTest/blob/master/Image/1-4.png) |
 
 
 
@@ -134,9 +134,9 @@ public class MyScriptableObject2 : ScriptableObject {
 } // class MyScriptableObject2
 ```
 
-| 热重载前 | 热重载后 |
+| 序列化前 | 序列化后 |
 | ------------- | ------------- |
-| ![热重载前](https://github.com/jintiao/SerializationTest/blob/master/Doc/test2-1.png) | ![热重载后](https://github.com/jintiao/SerializationTest/blob/master/Doc/test2-2.png) |
+| ![序列化前](https://github.com/jintiao/SerializationTest/blob/master/Image/2-1.png) | ![序列化后](https://github.com/jintiao/SerializationTest/blob/master/Image/2-2.png) |
 
 可以看到，`EditorWindow2`保存着一个`MyScriptableObject2`对象，这个对象在热重载后丢失了。原因是，`EditorWindow2`序列化时只是对`m`的引用进行序列化，而`m`本身没有进行序列化，在`EditorWindow2`被释放掉之后，`m`引用的对象被gc掉了。编辑器在重建`EditorWindow2`时，发现`m`引用的对象不存在，于是把引用置空。
 
@@ -159,9 +159,9 @@ public class TestWindow3 : EditorWindow {
 } // class TestWindow3
 ```
 
-| 热重载前 | 热重载后 |
+| 序列化前 | 序列化后 |
 | ------------- | ------------- |
-| ![热重载前](https://github.com/jintiao/SerializationTest/blob/master/Doc/test3-1.png) | ![热重载后](https://github.com/jintiao/SerializationTest/blob/master/Doc/test3-2.png) |
+| ![序列化前](https://github.com/jintiao/SerializationTest/blob/master/Image/3-1.png) | ![序列化后](https://github.com/jintiao/SerializationTest/blob/master/Image/3-2.png) |
 
 `EditorWindow3`在初始化时，先尝试读取m对应的asset，在asset不存在时，创建一个新的`MyScriptableObject3`对象，并显式地对m进行保存。
 这样，编辑器在重建`EditorWindow3`时，发现`m`引用的对象并没有载入，会自动进行加载。
@@ -170,12 +170,29 @@ public class TestWindow3 : EditorWindow {
 
 #### 3.非UnityEngine对象的序列化
 
-* 序列化时保存值
-* 同一对象的多个引用，在序列化后会变成多个对象
-* 对对象的空引用，在序列化后会变成新对象
-* 不支持多态
+* 不支持null引用，系统会自动生成新对象。
 
-#### 4.自定义序列化
+| 序列化前 | 序列化后 |
+| ------------- | ------------- |
+| ![序列化前](https://github.com/jintiao/SerializationTest/blob/master/Image/4-1.png) | ![序列化后](https://github.com/jintiao/SerializationTest/blob/master/Image/4-2.png) |
+
+* 不支持多态。
+
+| 序列化前 | 序列化后 |
+| ------------- | ------------- |
+| ![序列化前](https://github.com/jintiao/SerializationTest/blob/master/Image/5-1.png) | ![序列化后](https://github.com/jintiao/SerializationTest/blob/master/Image/5-2.png) |
+
+| 序列化前 | 序列化后 |
+| ------------- | ------------- |
+| ![序列化前](https://github.com/jintiao/SerializationTest/blob/master/Image/6-1.png) | ![序列化后](https://github.com/jintiao/SerializationTest/blob/master/Image/6-2.png) |
+
+* 序列化时保存值。同一对象的多个引用，在序列化后会变成多个对象
+
+#### 4.容器的序列化
+
+| 序列化前 | 序列化后 |
+| ------------- | ------------- |
+| ![序列化前](https://github.com/jintiao/SerializationTest/blob/master/Image/7-1.png) | ![序列化后](https://github.com/jintiao/SerializationTest/blob/master/Image/7-2.png) |
 
 ### 四：序列化最佳实践
 
@@ -183,5 +200,7 @@ public class TestWindow3 : EditorWindow {
 ### 参考
 
 [1] [Unity Manual - Script Serialization](https://docs.unity3d.com/Manual/script-Serialization.html)
+
 [2] [Unity Manual - Custom Serialization](https://docs.unity3d.com/Manual/script-Serialization-Custom.html)
+
 [3] [Serialization in-depth with Tim Cooper](https://www.youtube.com/watch?v=MmUT0ljrHNc)
