@@ -72,11 +72,13 @@ namespace SerializationTest.Test6
 		}
 	}
 
-	public class TestWindow6 : EditorWindow {
+	public class PolymorphismSerializationWindow : EditorWindow {
+		private const string WINDOW_TITLE = "Polymophism Serialization";
+
 		private Zoo zoo;
 
 		void OnEnable() {
-			titleContent.text = "TestWindow6";
+			titleContent.text = WINDOW_TITLE;
 
 			if(zoo == null) {
 				zoo = new Zoo();
@@ -107,10 +109,10 @@ namespace SerializationTest.Test6
 			EditorGUILayout.EndHorizontal();
 		}
 
-		[MenuItem ("Window/Serialization Test/Test Window 6")]
+		[MenuItem ("Window/Serialization Test/Test 6 - " + WINDOW_TITLE)]
 		public static void  ShowWindow()
 		{
-			EditorWindow.GetWindow<TestWindow6>();
+			EditorWindow.GetWindow<PolymorphismSerializationWindow>();
 		}
 
 	} // class TestWindow6

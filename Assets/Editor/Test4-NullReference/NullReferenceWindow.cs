@@ -17,11 +17,13 @@ namespace SerializationTest.Test4
 		public int data;
 	}
 
-	public class TestWindow4 : EditorWindow {
+	public class NullReferenceWindow : EditorWindow {
+		private const string WINDOW_TITLE = "Null Reference";
+
 		private MyObject obj;
 
 		void OnEnable() {
-			titleContent.text = "TestWindow4";
+			titleContent.text = WINDOW_TITLE;
 
 			if(obj == null) {
 				obj = new MyObject();
@@ -39,10 +41,10 @@ namespace SerializationTest.Test4
 			}
 		}
 
-		[MenuItem ("Window/Serialization Test/Test Window 4")]
+		[MenuItem ("Window/Serialization Test/Test 4 - " + WINDOW_TITLE)]
 		public static void  ShowWindow()
 		{
-			EditorWindow.GetWindow<TestWindow4>();
+			EditorWindow.GetWindow<NullReferenceWindow>();
 		}
 
 	} // class TestWindow4

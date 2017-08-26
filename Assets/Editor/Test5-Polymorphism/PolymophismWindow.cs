@@ -13,11 +13,13 @@ namespace SerializationTest.Test5
 		public List<Animal> animals = new List<Animal>();
 	}
 		
-	public class TestWindow5 : EditorWindow {
+	public class PolymophismWindow : EditorWindow {
+		private const string WINDOW_TITLE = "Polymophism";
+
 		private Zoo zoo;
 
 		void OnEnable() {
-			titleContent.text = "TestWindow5";
+			titleContent.text = WINDOW_TITLE;
 
 			if(zoo == null) {
 				zoo = new Zoo();
@@ -48,10 +50,10 @@ namespace SerializationTest.Test5
 			EditorGUILayout.EndHorizontal();
 		}
 
-		[MenuItem ("Window/Serialization Test/Test Window 5")]
+		[MenuItem ("Window/Serialization Test/Test 5 - " + WINDOW_TITLE)]
 		public static void  ShowWindow()
 		{
-			EditorWindow.GetWindow<TestWindow5>();
+			EditorWindow.GetWindow<PolymophismWindow>();
 		}
 
 	} // class TestWindow5

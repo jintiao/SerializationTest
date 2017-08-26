@@ -47,11 +47,13 @@ namespace SerializationTest.Test7
 		}
 	}
 
-	public class TestWindow7 : EditorWindow {
+	public class DictionarySerializationWindow : EditorWindow {
+		private const string WINDOW_TITLE = "Dictionary Serialization";
+
 		public InfoBook infoBook;
 
 		void OnEnable() {
-			titleContent.text = "TestWindow7";
+			titleContent.text = WINDOW_TITLE;
 
 			if(infoBook == null) {
 				infoBook = new InfoBook();
@@ -84,10 +86,10 @@ namespace SerializationTest.Test7
 			}
 		}
 
-		[MenuItem ("Window/Serialization Test/Test Window 7")]
+		[MenuItem ("Window/Serialization Test/Test 7 - " + WINDOW_TITLE)]
 		public static void  ShowWindow()
 		{
-			EditorWindow.GetWindow<TestWindow7>();
+			EditorWindow.GetWindow<DictionarySerializationWindow>();
 		}
 
 	} // class TestWindow7

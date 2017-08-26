@@ -6,7 +6,9 @@ using SerializationTest.Common;
 namespace SerializationTest.Test3
 {
 
-	public class TestWindow3 : EditorWindow {
+	public class SavedScriptableObjectWindow : EditorWindow {
+		private const string WINDOW_TITLE = "Saved ScriptableObject";
+
 		public MyScriptableObject m;
 
 		void OnEnable() {
@@ -21,7 +23,7 @@ namespace SerializationTest.Test3
 				}
 			}
 
-			titleContent.text = "TestWindow3";
+			titleContent.text = WINDOW_TITLE;
 		}
 
 		void OnGUI() {
@@ -38,9 +40,9 @@ namespace SerializationTest.Test3
 			}
 		}
 
-		[MenuItem ("Window/Serialization Test/Test Window 3")]
+		[MenuItem ("Window/Serialization Test/Test 3 - " + WINDOW_TITLE)]
 		public static void  ShowWindow() {
-			EditorWindow.GetWindow<TestWindow3>();
+			EditorWindow.GetWindow<SavedScriptableObjectWindow>();
 		}
 
 	} // class TestWindow3

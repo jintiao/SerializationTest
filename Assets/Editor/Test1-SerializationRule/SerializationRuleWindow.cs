@@ -41,7 +41,7 @@ namespace SerializationTest.Test1
 			if(s2 == null)
 				s2 = new MyClassSerializable();
 
-			titleContent.text = "TestWindow1";
+			titleContent.text = "Serialization Rule";
 		}
 
 		void OnGUI() {
@@ -56,7 +56,7 @@ namespace SerializationTest.Test1
 			s2.OnGUI();
 		}
 
-		[MenuItem ("Window/Serialization Test/Test Window 1")]
+		[MenuItem ("Window/Serialization Test/Test 1 - Serialization Rule")]
 		public static void  ShowWindow()
 		{
 			EditorWindow.GetWindow<TestWindow1>();

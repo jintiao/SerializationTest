@@ -6,14 +6,16 @@ using SerializationTest.Common;
 namespace SerializationTest.Test2
 {
 
-	public class TestWindow2 : EditorWindow {
+	public class ScriptableObjectWindow : EditorWindow {
+		private const string WINDOW_TITLE = "ScriptableObject";
+
 		public MyScriptableObject m;
 
 		void OnEnable() {
 			if(m == null) 
 				m = CreateInstance<MyScriptableObject>();
 
-			titleContent.text = "TestWindow2";
+			titleContent.text = WINDOW_TITLE;
 		}
 
 		void OnGUI() {
@@ -25,9 +27,9 @@ namespace SerializationTest.Test2
 			}
 		}
 
-		[MenuItem ("Window/Serialization Test/Test Window 2")]
+		[MenuItem ("Window/Serialization Test/Test 2 - " + WINDOW_TITLE)]
 		public static void  ShowWindow() {
-			EditorWindow.GetWindow<TestWindow2>();
+			EditorWindow.GetWindow<ScriptableObjectWindow>();
 		}
 
 	} // class TestWindow2
