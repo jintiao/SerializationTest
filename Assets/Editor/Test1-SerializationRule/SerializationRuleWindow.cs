@@ -28,7 +28,9 @@ namespace SerializationTest.Test1
 		}
 	}
 
-	public class TestWindow1 : EditorWindow {
+	public class SerializationRuleWindow : EditorWindow {
+		private const string WINDOW_TITLE = "Serialization Rule";
+
 		public MyClass m1;
 		public MyClassSerializable s1;
 		private MyClassSerializable s2;
@@ -41,7 +43,7 @@ namespace SerializationTest.Test1
 			if(s2 == null)
 				s2 = new MyClassSerializable();
 
-			titleContent.text = "Serialization Rule";
+			titleContent.text = WINDOW_TITLE;
 		}
 
 		void OnGUI() {
@@ -56,12 +58,12 @@ namespace SerializationTest.Test1
 			s2.OnGUI();
 		}
 
-		[MenuItem ("Window/Serialization Test/Test 1 - Serialization Rule")]
+		[MenuItem ("Window/Serialization Test/Test 1 - " + WINDOW_TITLE)]
 		public static void  ShowWindow()
 		{
-			EditorWindow.GetWindow<TestWindow1>();
+			EditorWindow.GetWindow<SerializationRuleWindow>();
 		}
 
-	} // class TestWindow1
+	} // class SerializationRuleWindow
 
 } // namespace SerializationTest.Test1
