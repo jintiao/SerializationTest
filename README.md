@@ -8,7 +8,7 @@
 
 就算不需要与游戏对象交互，编辑器本身也会不断地对所有编辑器窗口触发序列化。如果在制作插件时不小心地处理序列化甚至忽略序列化系统的存在，做出来的插件很可能会不稳定经常报错，导致数据丢失等后果。
 
-新接触插件开发时最常遇到的状况可能是这样的：插件本来运行地好好地，点了一下播放后插件就发疯地不断报错，抱怨某个(些)变量值为null。
+下面的[例子](https://github.com/jintiao/SerializationTest/blob/master/Assets/Editor/Test0-BadEditor/BadEditorWindow.cs)展示的是我们新接触插件开发时最常遇到的一种异常情况：插件本来运行地好好地，点了一下播放后插件就发疯地不断报错，某个对象莫名被重置了。
 
 | 插件正常运行 | 点击播放后 |
 | ------------- | ------------- |
@@ -16,35 +16,33 @@
 
 如果你曾经遇到过这种情况，而且不明白为什么，这篇文章应该能解答你的疑惑。
 
-### 三：序列化是什么
+### 二：序列化是什么
 根据Unity的官方定义，序列化就是将数据结构或对象状态转换成可供Unity保存和随后重建的自动化处理过程。
 
 ### 三：序列化规则
 
 序列化规则简单来说有两点，一是类型规则，系统据此判断能不能对对象进行序列化；二是字段规则，系统据此判断该不该对对象进行序列化。当对象同时满足类型规则和字段规则时，系统就会对该对象进行序列化。
 
-下面两张表简单地总结了序列化的规则：
-
 * 类型规则
 
-| 支持的数据类型 | 不支持的数据类型 |
+| 能序列化的类型 | 不能序列化的类型 |
 | ------------- | ------------- |
-| c#原生数据类型(int/float/bool/string等，以及枚举)  | 抽象类 |
-| Unity内置数据类型(Vector/Rect/Quaternion等)  | 静态类 |
-| 继承自UnityEngine.Object的类 | 范型类  |
-| 标记了[Serializable]属性的自定义类  | 没有标记[Serializable]属性的自定义类 |
-| Array,List容器  | Dictionary或其它容器 |
+| c#原生数据类型(int/string/enum...)  | 抽象类 |
+| Unity内置数据类型(Vector/Rect/Color...)  | 静态类 |
+| 继承自UnityEngine.Object的类 | 泛型类  |
+| 标记了[Serializable]属性的类  | 没有标记[Serializable]属性的类 |
+| Array,List容器  | 其它容器 |
 
 * 字段规则
 
-| 应该序列化的成员字段 | 不应该序列化的成员字段 |
+| 该序列化的字段 | 不该序列化的字段 |
 | ------------- | ------------- |
-| public成员 | const/readonly/static成员 |
-| 标记了[SerializeField]属性的成员  | 标记了[NonSerialized]属性的成员 |
+| public字段 | private/const/readonly/static成员 |
+| 标记了[SerializeField]属性的字段  | 标记了[NonSerialized]属性的字段 |
 
-我们来通过一个简单的例子说明一下这个规则。
+我们通过一个[例子](https://github.com/jintiao/SerializationTest/blob/master/Assets/Editor/Test1-SerializationRule/SerializationRuleWindow.cs)来具体讲解一下。
 
-我们先自定义两个类，一个叫MyClass，一个叫MyClassSerializable，主要的代码如下
+我们定义了两个类，一个叫`MyClass`，另一个叫`MyClassSerializable`
 ```c#
 public class MyClass {
 	public string s;
@@ -59,125 +57,135 @@ public class MyClassSerializable {
 }
 ```
 
-然后我们新建一个编辑器窗口，用来触发序列化，看系统会如何处理这两个类的对象。
+接下来我们定义一个插件类`SerializationRuleWindow`
 ```c#
-public class TestWindow1 : EditorWindow {
+public class SerializationRuleWindow : EditorWindow {
 	public MyClass m1;
 	public MyClassSerializable s1;
 	private MyClassSerializable s2;
 }
 ```
 
-GUI相关的代码就不列出来了，完整的代码在[这里](https://github.com/jintiao/SerializationTest/blob/master/Assets/Editor/Test1/TestWindow1.cs)。
+点击编辑器菜单"Window -> Serialization Test -> Test 1 - Serialization Rule"打开插件窗口，可以看到窗口中显示着所有对象当前的值，并且可以通过滚动条修改各个对象的值。一切看起来很美好，接下来我们关掉编辑器再重新打开，看看插件窗口会出现什么变化：
 
 | 重启编辑器前 | 重启编辑器后 |
 | ------------- | ------------- |
 | ![重启编辑器前](https://github.com/jintiao/SerializationTest/blob/master/Image/1-1.png) | ![重启编辑器后](https://github.com/jintiao/SerializationTest/blob/master/Image/1-2.png) |
 
-在编辑器中打开TestWindow1，分别给各个对象随机赋值
+可以看到，s1的两个成员f1和i2保存了原来的值，其它成员都被清零了，我们来具体分析一下为什么会是这样。
 
-退出编辑器，这时编辑器会对TestWindow1对象进行序列化。再次打开编辑器，编辑器会通过反序列化创建一个新的TestWindow1对象，我们来看经过序列化反序列化后的TestWindow1对象有何变化
+编辑器退出前会对所有打开的窗口进行序列化并保存序列化数据到硬盘。在重启编辑器后，序列化系统读入序列化数据，重新生成对应的窗口对象。在对我们的插件对象`SerializationRuleWindow`进行序列化时，只有满足序列化规则的对象的值得以保存，不满足规则的对象则被序列化系统忽略。
 
+我们来仔细看一下规则判定的情况。
 
-可以看到，只有s1的两个成员f1和i2保存了原来的值，其它成员都被清零了，我们来具体分析一下为什么会是这样。
+首先看`public MyClass m1`，它的类型是`MyClass`，属于“没有标记`[Serializable]`属性的类”，不满足类型规则；它的字段是`public`，满足字段规则；系统要求两条规则同时满足的对象才能序列化，于是它被跳过了。
 
-首先看`public MyClass m1`，第一它的成员字段是`public`，满足字段规则；第二它的类型是`MyClass`，属于没有标记`[Serializable]`属性的自定义类，不满足类型规则，于是它在序列化过程中被跳过了。
+接下来看`public MyClassSerializable s1`，它的类型是`MyClassSerializable`，属于标记了`[Serializable]`属性的类，满足类型规则；它的字段是`public`，满足字段规则；`s1`同时满足类型规则和字段规则，系统需要对它进行序列化操作。
 
-接下来看`public MyClassSerializable s1`，第一它的成员字段是`public`，满足字段规则；第二它的类型是`MyClassSerializable`，属于标记了`[Serializable]`属性的自定义类，满足类型规则。`s1`同时满足字段规则和类型规则，系统要对它进行序列化操作。
-系统接着对`s1`的成员逐一进行规则检查。
-```c#
-public float f1; // 字段是public,满足；类型float是c#原生数据类型，也满足。系统对f1进行序列化。
-[NonSerialized]public float f2; // 字段是public，但是被标记了[NonSerialized]，所以字段规则不满足，f2不会进行序列化。
-private int i1; // 字段是private，所以字段规则不满足，i1不会进行序列化。
-[SerializeField]private int i2; // 字段是private，但是被标记了[SerializeField]，所以字段规则满足；类型int是c#原生数据类型，也满足。系统对i2进行序列化。
-```
-这就解释了为什么s1中只有f1和i2保留这原来的值。
+序列化是一个递归过程，对`s1`进行序列化意味着要对`s1`的所有类成员对象进行序列化判断。所以现在轮到`s1`中的成员进行规则判断了。
 
-最后我们看`private MyClassSerializable s2`，这时我们都能轻易看出来了，`private`字段不满足规则，s2不进行序列化。
+`public float f1`，类型float是c#原生数据类型，满足类型规则；字段是public，满足字段规则；判断通过。
+
+`[NonSerialized]public float f2`，字段被标记了[NonSerialized]，不满足字段规则。
+
+`private int i1`，字段是private，不满足字段规则。
+
+`[SerializeField]private int i2`，类型int是c#原生数据类型，满足类型规则；字段被标记了[SerializeField]，满足字段规则；判断通过。
+
+所以s1中f1和i2通过了规则判断，f2和i1没有通过。所以图中s1.f1和s1.i2保留了原来的值。
+
+最后我们看`private MyClassSerializable s2`，这时相信我们都能轻易看出来，`private`不满足字段规则，s2被跳过。
 
 ### 四：跨过序列化的坑
 
-看到这里，是不是觉得序列化很容易掌握？别高兴太早，这个世界并不是我们想象的这么简单，现在是时候让我们来面对序列化复杂的另一面了。
+上一节我们通过例子了解了序列化的规则，我们发现我们好像已经掌握了序列化系统的秘密。但！是！别高兴太早，这个世界并不是我们想象的这么简单，现在是时候让我们来面对系统复杂的一面了。
 
-#### 1.EditorWindow热重载
-热重载(hot-reloading)是我们最常见却又常常忽略的序列化例外。我们继续用前面的TestWindow1做演示，打开窗口分别给各个对象随机赋值
+#### 1. 热重载(hot-reloading)
+
+对脚本进行修改可以即时编译，不需要重启编辑器就看看到效果，这是Unity编辑器的一个令人称赞的机制。你有没有想过它是怎么实现的呢？答案就是热重载。
+
+当编辑器检测到代码环境发生变化(脚本被修改、点击播放)时，会对所有现存的编辑器窗口进行**热重载序列化**。等待环境恢复(编译完成、转换到播放状态)时，编辑器根据之前序列化的值对编辑器窗口进行恢复。
+
+热重载序列化与标准序列化的不同点是，在进行热重载序列化时，字段规则被忽略，只要被处理对象满足类型规则，那么就对其进行序列化。
+
+我们可以通过运行之前讲解序列化规则时的[例子](https://github.com/jintiao/SerializationTest/blob/master/Assets/Editor/Test1-SerializationRule/SerializationRuleWindow.cs)来对比热重载序列化与标准序列化的区别。
+
+记得上一节我们是通过退出重启编辑器触发的标准序列化，现在我们通过点击播放触发热重载序列化，运行结果如下
 
 | 热重载前 | 热重载后 |
 | ------------- | ------------- |
 | ![热重载前](https://github.com/jintiao/SerializationTest/blob/master/Image/1-3.png) | ![热重载后](https://github.com/jintiao/SerializationTest/blob/master/Image/1-4.png) |
 
+可以看到，之前由于字段为`private`的`s1.i1`以及`s2`都进行了序列化。同时我们也注意到标记了[NonSerialized]的`s1.f2`和`s2.f2`、没有标记[Serializable]的`m1`依然被跳过了。
 
+#### 2. ScriptableObject对象的序列化
 
-现在我们点击编辑器的"播放"按钮，观察TestWindow1窗口中的值有何变化
+我们把UnityEngine.Object及其派生类(比如MonoBehaviour和ScriptableObject)称为Unity引擎对象，它们属于引擎内部资源，在序列化时和其他普通类对象的处理机制上有着较大的区别。
 
+引擎对象特有的序列化规则如下：
+* 引擎对象需要单独进行序列化。
+* 如果别的对象保存着引擎对象的引用，这个对象序列化时只会序列化引擎对象的引用，而不是引擎对象本身。
+* 引擎对象的类名必须和文件名完全一致。
 
-可以看到，和前一节的例子不同，大部分变量都维持着原来的值；只有不支持序列化的m1，以及s1/s2中标记了[NonSerialized]的f2丢失了旧值。
+对于插件开发，我们最可能接触到的引擎对象就是ScriptableObject，我们通过这个[例子](https://github.com/jintiao/SerializationTest/blob/master/Assets/Editor/Test2-ScriptableObject/ScriptableObjectWindow.cs)来讲解ScriptableObject的序列化。
 
-看过了现象，现在我们对热重载进行详细讲解。
-
-当编辑器检测到代码环境发生变化(脚本被修改需要重新编译、切换播放状态)时，会对所有现存的编辑器窗口进行热重载。等待编译完成(或切换到播放状态)，编辑器根据之前序列化的值对编辑器窗口进行恢复。
-
-热重载序列化与标准序列化的不同点是：热重载时，只要被处理对象能够被序列化，且没有标记[NonSerialized]，那么就对其进行序列化。
-
-#### 2.UnityEngine对象的序列化
-
-Unity对于UnityEngine.Object及其派生类型(以下统一简称为Object)对象也有着特殊的序列化规则，总结如下
-* Object对象需要单独进行序列化。
-* Object对象的类名必须和文件名完全一致。
-* 对于任意一个对象中，如果它保存着Object对象的引用，那么序列化这个对象时只会序列化Object对象的引用。
-
-我们还是通过例子来说明这几条规则。
-我们新定义一个编辑器窗口`EditorWindow2`，一个自定义的类`MyScriptableObject2`，继承自`ScriptableObject`
+我们新定义一个编辑器窗口`ScriptableObjectWindow`，一个自定义的类`MyScriptableObject`
 ```c#
-public class TestWindow2 : EditorWindow {
-	public MyScriptableObject2 m;
-	void OnEnable() {
-		if(m == null)
-			m = CreateInstance<MyScriptableObject2>();
-	}
-} // class TestWindow2
-
-public class MyScriptableObject2 : ScriptableObject {
+public class MyScriptableObject : ScriptableObject {
 	public int i1;
 	public int i2;
-} // class MyScriptableObject2
+}
+
+public class ScriptableObjectWindow : EditorWindow {
+	public MyScriptableObject m;
+	void OnEnable() {
+		if(m == null)
+			m = CreateInstance<MyScriptableObject>();
+	}
+}
 ```
+
+我们把`m`的字段设为`public`确保系统会对它进行序列化。我们来看运行结果
 
 | 序列化前 | 序列化后 |
 | ------------- | ------------- |
 | ![序列化前](https://github.com/jintiao/SerializationTest/blob/master/Image/2-1.png) | ![序列化后](https://github.com/jintiao/SerializationTest/blob/master/Image/2-2.png) |
 
-可以看到，`EditorWindow2`保存着一个`MyScriptableObject2`对象，这个对象在热重载后丢失了。原因是，`EditorWindow2`序列化时只是对`m`的引用进行序列化，而`m`本身没有进行序列化，在`EditorWindow2`被释放掉之后，`m`引用的对象被gc掉了。编辑器在重建`EditorWindow2`时，发现`m`引用的对象不存在，于是把引用置空。
+可以看到，`m`在热重载后是个空值，`ScriptableObjectWindow`只能重新生成一个新的`MyScripatable`对象。
 
-这就是规则1和规则3的具体表现。那么怎样处理才是正确的呢？我们看稍加修改的`EditorWindow3`
+回看第二条规则，我们知道`ScriptableObjectWindow`序列化时只会保存`m`对象的引用。在编辑器状态变化后，`m`所引用的引擎对象被gc释放掉了(序列化后`ScriptableObjectWindow`被销毁，引擎对象没有别的引用了)。所以编辑器在重建`ScriptableObjectWindow`时，发现`m`是个无效引用，于是将`m`置空。
+
+那么，如何避免`m`引用失效呢？很简单，将`m`保存到硬盘就行了。对于引擎对象的引用，Unity不光能找到已经加载的内存对象，还能在对象未加载时找到它对应的文件进行自动加载。在这个[例子](https://github.com/jintiao/SerializationTest/blob/master/Assets/Editor/Test3-SavedScriptableObject/SavedScriptableObjectWindow.cs)，我们在创建`MyScriptableObject`对象的同时将其保存到硬盘，确保其永久有效
+
 ```c#
-public class TestWindow3 : EditorWindow {
-	public MyScriptableObject3 m;
+public class SavedScriptableObjectWindow : EditorWindow {
+	public MyScriptableObject m;
 	void OnEnable() {
-		if(m == null) {
-			string path = "Assets/Editor/Test3/SaveData.asset";
-			m = AssetDatabase.LoadAssetAtPath<MyScriptableObject3>(path);
-			if(m == null) {
-				m = CreateInstance<MyScriptableObject3>();
-				AssetDatabase.CreateAsset(m, path);
+		if(m == null) { // 注意只在新开窗口时 m 才会为 null
+			string path = "Assets/Editor/Test3-SavedScriptableObject/SaveData.asset";
+			// 先尝试从硬盘中读取asset
+			m = AssetDatabase.LoadAssetAtPath<MyScriptableObject>(path);
+			if(m == null) { // 当asset不存在时创建并保存
+				m = CreateInstance<MyScriptableObject>();					AssetDatabase.CreateAsset(m, path);
 				AssetDatabase.SaveAssets();
 				AssetDatabase.Refresh();
 			}
 		}
 	}
-} // class TestWindow3
+}
 ```
+
+运行新的例子，我们可以看到`m`引用的对象再也不会丢失了
 
 | 序列化前 | 序列化后 |
 | ------------- | ------------- |
 | ![序列化前](https://github.com/jintiao/SerializationTest/blob/master/Image/3-1.png) | ![序列化后](https://github.com/jintiao/SerializationTest/blob/master/Image/3-2.png) |
 
-`EditorWindow3`在初始化时，先尝试读取m对应的asset，在asset不存在时，创建一个新的`MyScriptableObject3`对象，并显式地对m进行保存。
-这样，编辑器在重建`EditorWindow3`时，发现`m`引用的对象并没有载入，会自动进行加载。
+最后简单说一下第三条规则，类名与文件名相同这是Unity的硬性规定，比如`MyScriptableObject`对应的文件名必须是`MyScriptableObject.cs`。如果你发现编辑器在启动时，而且只在启动时报序列化错误，很大可能是因为类名和文件名不同所导致的。
 
-最后简单说以下规则2，类名与文件名相同这是Unity的硬性规定，比如`MyScriptableObject3`对应的文件名必须是`MyScriptableObject3.cs`。如果你发现编辑器在启动时，而且只在启动时报序列化错误，很大可能是因为类名和文件名不同所导致的。
+#### 3. 非引擎对象的序列化
 
-#### 3.非UnityEngine对象的序列化
+由于每个ScriptableObject对象都需要单独保存，插件最终可能会生成大量的asset文件，所以我们一般更倾向于使用自定义类。
 
 * 不支持null引用，系统会自动生成新对象。
 
