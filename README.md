@@ -47,8 +47,8 @@
 
 | 该序列化的字段 | 不该序列化的字段 |
 | ------------- | ------------- |
-| public字段 | private/const/readonly/static成员 |
-| 标记了[SerializeField]属性的字段  | 标记了[NonSerialized]属性的字段 |
+| public成员 | private/const/readonly/static成员 |
+| 标记了[SerializeField]属性的成员  | 标记了[NonSerialized]属性的成员 |
 
 我们通过[例子1](https://github.com/jintiao/SerializationTest/blob/master/Assets/Editor/Test1-SerializationRule/SerializationRuleWindow.cs)来具体讲解一下。
 
@@ -76,13 +76,13 @@ public class SerializationRuleWindow : EditorWindow {
 }
 ```
 
-点击编辑器菜单"Window -> Serialization Test -> Test 1 - Serialization Rule"打开插件窗口，可以看到窗口中显示着所有对象当前的值，并且可以通过滚动条修改各个对象的值。一切看起来很美好，接下来我们关掉编辑器再重新打开，看看插件窗口会出现什么变化：
+点击编辑器菜单"Window -> Serialization Test -> Test 1 - Serialization Rule"打开插件窗口，可以看到窗口中显示着所有对象当前的值，并且可以通过滚动条修改各个对象的值。一切看起来很美好，接下来我们退出编辑器再重新打开，看看插件窗口会出现什么变化：
 
 | 重启编辑器前 | 重启编辑器后 |
 | ------------- | ------------- |
 | ![重启编辑器前](https://github.com/jintiao/SerializationTest/blob/master/Image/1-1.png) | ![重启编辑器后](https://github.com/jintiao/SerializationTest/blob/master/Image/1-2.png) |
 
-可以看到，s1的两个成员f1和i2保存了原来的值，其它成员都被清零了，我们来具体分析一下为什么会是这样。
+可以看到，`s1`的两个成员`f1`和`i2`保存了原来的值，其它成员都被清零了，我们来具体分析一下为什么会是这样。
 
 编辑器退出前会对所有打开的窗口进行序列化并保存序列化数据到硬盘。在重启编辑器后，序列化系统读入序列化数据，重新生成对应的窗口对象。在对我们的插件对象`SerializationRuleWindow`进行序列化时，只有满足序列化规则的对象的值得以保存，不满足规则的对象则被序列化系统忽略。
 
@@ -94,17 +94,17 @@ public class SerializationRuleWindow : EditorWindow {
 
 序列化是一个递归过程，对`s1`进行序列化意味着要对`s1`的所有类成员对象进行序列化判断。所以现在轮到`s1`中的成员进行规则判断了。
 
-`public float f1`，类型float是c#原生数据类型，满足类型规则；字段是public，满足字段规则；判断通过。
+`public float f1`，类型`float`是c#原生数据类型，满足类型规则；字段是`public`，满足字段规则；判断通过。
 
-`[NonSerialized]public float f2`，字段被标记了[NonSerialized]，不满足字段规则。
+`[NonSerialized]public float f2`，字段被标记了`[NonSerialized]`，不满足字段规则。
 
-`private int i1`，字段是private，不满足字段规则。
+`private int i1`，字段是`private`，不满足字段规则。
 
-`[SerializeField]private int i2`，类型int是c#原生数据类型，满足类型规则；字段被标记了[SerializeField]，满足字段规则；判断通过。
+`[SerializeField]private int i2`，类型`int`是c#原生数据类型，满足类型规则；字段被标记了`[SerializeField]`，满足字段规则；判断通过。
 
-所以s1中f1和i2通过了规则判断，f2和i1没有通过。所以图中s1.f1和s1.i2保留了原来的值。
+所以`s1`中`f1`和`i2`通过了规则判断，`f2`和`i1`没有通过。所以图中`s1.f1`和`s1.i2`保留了原来的值。
 
-最后我们看`private MyClassSerializable s2`，这时相信我们都能轻易看出来，`private`不满足字段规则，s2被跳过。
+最后我们看`private MyClassSerializable s2`，这时相信我们都能轻易看出来，`private`不满足字段规则，`s2`被跳过。
 
 ### 四：跨过序列化的坑
 
@@ -126,20 +126,20 @@ public class SerializationRuleWindow : EditorWindow {
 | ------------- | ------------- |
 | ![热重载前](https://github.com/jintiao/SerializationTest/blob/master/Image/1-3.png) | ![热重载后](https://github.com/jintiao/SerializationTest/blob/master/Image/1-4.png) |
 
-可以看到，之前由于字段为`private`的`s1.i1`以及`s2`都进行了序列化。同时我们也注意到标记了[NonSerialized]的`s1.f2`和`s2.f2`、没有标记[Serializable]的`m1`依然被跳过了。
+可以看到，之前由于字段为`private`的`s1.i1`以及`s2`都进行了序列化。同时我们也注意到标记了[NonSerialized]的`s1.f2`和`s2.f2`、没有标记`[Serializable]`的`m1`依然被跳过了。
 
 #### 2. 引擎对象的序列化
 
-我们把UnityEngine.Object及其派生类(比如MonoBehaviour和ScriptableObject)称为Unity引擎对象，它们属于引擎内部资源，在序列化时和其他普通类对象的处理机制上有着较大的区别。
+我们把`UnityEngine.Object`及其派生类(比如`MonoBehaviour`和`ScriptableObject`)称为Unity引擎对象，它们属于引擎内部资源，在序列化时和其他普通类对象的处理机制上有着较大的区别。
 
 引擎对象特有的序列化规则如下：
 * 引擎对象需要单独进行序列化。
 * 如果别的对象保存着引擎对象的引用，这个对象序列化时只会序列化引擎对象的引用，而不是引擎对象本身。
 * 引擎对象的类名必须和文件名完全一致。
 
-对于插件开发，我们最可能接触到的引擎对象就是ScriptableObject，我们通过[例子2](https://github.com/jintiao/SerializationTest/blob/master/Assets/Editor/Test2-ScriptableObject/ScriptableObjectWindow.cs)来讲解ScriptableObject的序列化。
+对于插件开发，我们最可能接触到的引擎对象就是`ScriptableObject`，我们通过[例子2](https://github.com/jintiao/SerializationTest/blob/master/Assets/Editor/Test2-ScriptableObject/ScriptableObjectWindow.cs)来讲解`ScriptableObject`的序列化。
 
-我们新定义一个编辑器窗口`ScriptableObjectWindow`，一个继承自`ScriptableObject`的类`MyScriptableObject`
+我们新定义一个编辑器窗口`ScriptableObjectWindow`，和一个继承自`ScriptableObject`的类`MyScriptableObject`
 ```c#
 public class MyScriptableObject : ScriptableObject {
 	public int i1;
@@ -161,7 +161,7 @@ public class ScriptableObjectWindow : EditorWindow {
 | ------------- | ------------- |
 | ![序列化前](https://github.com/jintiao/SerializationTest/blob/master/Image/2-1.png) | ![序列化后](https://github.com/jintiao/SerializationTest/blob/master/Image/2-2.png) |
 
-可以看到，`m`在热重载后是个空值，`ScriptableObjectWindow`只能重新生成一个新的`MyScripatable`对象。
+可以看到，`m`的`InstanceId`在热重载后发生了变化，这意味着原来`m`所引用的对象丢失了，`ScriptableObjectWindow`只能重新生成一个新的`MyScripatable`对象给`m`赋值。
 
 回看第二条规则，我们知道`ScriptableObjectWindow`序列化时只会保存`m`对象的引用。在编辑器状态变化后，`m`所引用的引擎对象被gc释放掉了(序列化后`ScriptableObjectWindow`被销毁，引擎对象没有别的引用了)。所以编辑器在重建`ScriptableObjectWindow`时，发现`m`是个无效引用，于是将`m`置空。
 
@@ -195,7 +195,7 @@ public class SavedScriptableObjectWindow : EditorWindow {
 
 #### 3. 普通类对象的序列化
 
-由于每个ScriptableObject对象都需要单独保存，如果插件使用了多个ScriptableObject对象，保存这些对象意味着多个文件，而大量的零碎文件意味着读取速度会变慢。
+由于每个`ScriptableObject`对象都需要单独保存，如果插件使用了多个`ScriptableObject`对象，保存这些对象意味着多个文件，而大量的零碎文件意味着读取速度会变慢。
 
 如果你在考虑这个问题，不妨将目光转向普通类。和引擎对象不一样，普通类对象是按值存储的，所以我们可以将所有的普通类对象混在一起保存成单一文件。
 
@@ -297,7 +297,7 @@ public class Zoo {
 #### 1.多态对象序列化
 
 还记得我们例5的动物园吗，由于系统不支持多态对象造成了数据丢失，现在我们尝试通过自定义序列化来修正这个问题。
-在[例子6](https://github.com/jintiao/SerializationTest/blob/master/Assets/Editor/Test6-PolymorphismSerialization/PolymorphismSerializationWindow.cs)中，我们重新定义了`Zoo`类：
+在[例子6](https://github.com/jintiao/SerializationTest/blob/master/Assets/Editor/Test6-PolymorphismSerialization/PolymorphismSerializationWindow.cs)中，我们重新定义了`Zoo`类让它支持自定义序列化
 ```c#
 [Serializable]
 public class Zoo : ISerializationCallbackReceiver
@@ -364,7 +364,7 @@ public class Zoo : ISerializationCallbackReceiver
 }
 ```
 
-我们为`Zoo`添加了`ISerializationCallbackReceiver`接口，在序列化之前，系统会调用`OnBeforeSerialize`，我们在这里把`List<Animal>`一分为三：`List<Cat>`、`List<Dog>`，以及`List<Giraffe>`。新生成的三个链表用于序列化，避免多态的问题。在反序列化之前，系统调用`OnAfterDeserialize`，我们又把三个链表合为一个供用户使用。我们来看这样的处理能否解决问题
+我们为`Zoo`添加了`ISerializationCallbackReceiver`接口，在序列化之前，系统会调用`OnBeforeSerialize`，我们在这里把`List<Animal>`一分为三：`List<Cat>`、`List<Dog>`，以及`List<Giraffe>`。新生成的三个链表用于序列化，避免多态的问题。在反序列化之后，系统调用`OnAfterDeserialize`，我们又把三个链表合为一个供用户使用。我们来看这样的处理能否解决问题
 
 | 序列化前 | 序列化后 |
 | ------------- | ------------- |
@@ -372,7 +372,7 @@ public class Zoo : ISerializationCallbackReceiver
 
 #### 2.Dictionary容器序列化
 
-在实践中，Dictionary容器也是经常使用的容器类。系统不支持Dictionary容器的序列化给我们造成了不便，我们也可以通过自定义序列化来解决。
+在实践中，`Dictionary`容器也是经常使用的容器类。系统不支持`Dictionary`容器的序列化给我们造成了不便，我们也可以通过自定义序列化来解决。
 
 [例7](https://github.com/jintiao/SerializationTest/blob/master/Assets/Editor/Test7-DictionarySerialization/DictionarySerializationWindow.cs)
 ```c#
