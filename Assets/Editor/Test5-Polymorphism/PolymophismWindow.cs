@@ -8,8 +8,7 @@ namespace SerializationTest.Test5
 {
 
 	[Serializable]
-	public class Zoo
-	{
+	public class Zoo {
 		public List<Animal> animals = new List<Animal>();
 	}
 		

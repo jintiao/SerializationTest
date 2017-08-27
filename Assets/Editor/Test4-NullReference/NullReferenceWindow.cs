@@ -6,21 +6,19 @@ namespace SerializationTest.Test4
 {
 
 	[Serializable]
-	public class MyObject
-	{
-		public MyObject2 obj2;
+	public class MyObject {
+		public MyNestedObject obj2;
 	}
 
 	[Serializable]
-	public class MyObject2
-	{
+	public class MyNestedObject {
 		public int data;
 	}
 
 	public class NullReferenceWindow : EditorWindow {
 		private const string WINDOW_TITLE = "Null Reference";
 
-		private MyObject obj;
+		public MyObject obj;
 
 		void OnEnable() {
 			titleContent.text = WINDOW_TITLE;
@@ -47,6 +45,6 @@ namespace SerializationTest.Test4
 			EditorWindow.GetWindow<NullReferenceWindow>();
 		}
 
-	} // class TestWindow4
+	} // class NullReferenceWindow
 
 } // namespace SerializationTest.Test4
