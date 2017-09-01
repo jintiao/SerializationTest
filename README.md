@@ -176,7 +176,8 @@ public class SavedScriptableObjectWindow : EditorWindow {
 			// 先尝试从硬盘中读取asset
 			m = AssetDatabase.LoadAssetAtPath<MyScriptableObject>(path);
 			if(m == null) { // 当asset不存在时创建并保存
-				m = CreateInstance<MyScriptableObject>();					AssetDatabase.CreateAsset(m, path);
+				m = CreateInstance<MyScriptableObject>();
+				AssetDatabase.CreateAsset(m, path);
 				AssetDatabase.SaveAssets();
 				AssetDatabase.Refresh();
 			}
